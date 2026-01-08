@@ -1,257 +1,179 @@
+import java.sql.*;
+import java.util.Scanner;
 
-// STEP 1: Student class
-import java.util.*;
-import java.io.*;
-class Student {
-    String name;
-    int rollNumber;
-    double marks;
-
-    public Student(String name, int rollNumber, double marks) {
-        this.name = name;
-        this.rollNumber = rollNumber;
-        this.marks = marks;
-    }
-}
-// STEP 2: Main class starts here
 public class StudentManagementSystem {
 
-    // this is our list of students
-    static ArrayList<Student> students = new ArrayList<>();
+    // --- DATABASE CONFIGURATION ---
+    static final String DB_URL = "jdbc:mysql://localhost:3306/student_db";
+    static final String DB_USER = "root"; 
+    // CHANGE THIS PASSWORD IF NEEDED:
+    static final String DB_PASSWORD = "root1234"; 
 
-    // scanner for user input
     static Scanner sc = new Scanner(System.in);
+
+    // --- HELPER METHOD TO CONNECT TO DB ---
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+    }
 
     public static void menu() {
         while (true) {
-          System.out.println("\n--- Student Management System ---");
-          System.out.println("1. Add Student");
-          System.out.println("2. Remove Student");
-          System.out.println("3. Search Student");
-          System.out.println("4. Display All Students");
-          System.out.println("5. Exit");
-          System.out.println("6. Update Student");
-          System.out.println("7. Sort by Marks (High to Low)");
-          System.out.println("8. Sort by Marks (Low to High)");
-          System.out.println("9. Save Students to File");      
-          System.out.println("10. Load Students from File");
-
-          System.out.print("Enter your choice: ");
-
-
-          int choice = sc.nextInt();
-
-            switch (choice) {
-              case 1 -> addStudent();
-              case 2 -> removeStudent();
-              case 3 -> searchStudent();
-              case 4 -> displayStudents();
-              case 5 -> {
-                System.out.println("Exiting...");
-                return;
-              }
-              case 6 -> updateStudent();
-              case 7 -> sortHighToLow();
-              case 8 -> sortLowToHigh();
-              case 9 -> saveToFile();
-              case 10 -> loadFromFile();
-
-
-              default -> System.out.println("Invalid choice. Try again.");
-            }
-        }
-    }
-    public static void addStudent() {
-    System.out.print("Enter name: ");
-    sc.nextLine(); // consume leftover newline
-    String name = sc.nextLine();
-
-    System.out.print("Enter roll number: ");
-    int roll = sc.nextInt();
-
-    System.out.print("Enter marks: ");
-    double marks = sc.nextDouble();
-
-    Student s = new Student(name, roll, marks);
-    students.add(s);
-
-    System.out.println("Student added successfully!");
-}
-public static void removeStudent() {
-    System.out.print("Enter roll number to remove: ");
-    int roll = sc.nextInt();
-
-    for (int i = 0; i < students.size(); i++) {
-        if (students.get(i).rollNumber == roll) {
-            students.remove(i);
-            System.out.println("Student removed successfully!");
-            return;
-        }
-    }
-
-    System.out.println("Student not found!");
-}
-public static void searchStudent() {
-    System.out.print("Enter roll number to search: ");
-    int roll = sc.nextInt();
-
-    for (Student s : students) {
-        if (s.rollNumber == roll) {
-            System.out.println("\n--- Student Found ---");
-            System.out.println("Name: " + s.name);
-            System.out.println("Roll Number: " + s.rollNumber);
-            System.out.println("Marks: " + s.marks);
-            return;
-        }
-    }
-
-    System.out.println("Student not found!");
-}
-public static void displayStudents() {
-    if (students.isEmpty()) {
-        System.out.println("No students available.");
-        return;
-    }
-
-    System.out.println("\n--- List of All Students ---");
-    for (Student s : students) {
-        System.out.println("Name: " + s.name);
-        System.out.println("Roll Number: " + s.rollNumber);
-        System.out.println("Marks: " + s.marks);
-        System.out.println("-----------------------------");
-    }
-}
-public static void updateStudent() {
-    System.out.print("Enter roll number of the student to update: ");
-    int roll = sc.nextInt();
-
-    for (Student s : students) {
-        if (s.rollNumber == roll) {
-
-            System.out.println("\nWhat do you want to update?");
-            System.out.println("1. Name");
-            System.out.println("2. Marks");
-            System.out.println("3. Both");
+            System.out.println("\n--- Student Management System (Powered by SQL) ---");
+            System.out.println("1. Add Student (INSERT)");
+            System.out.println("2. Remove Student (DELETE)");
+            System.out.println("3. Search Student (SELECT)");
+            System.out.println("4. Display All Students");
+            System.out.println("5. Exit");
+            System.out.println("6. Update Student (UPDATE)");
+            
             System.out.print("Enter your choice: ");
-
             int choice = sc.nextInt();
-            sc.nextLine(); // clearing newline
 
             switch (choice) {
-                case 1 -> {
-                    System.out.print("Enter new name: ");
-                    String newName = sc.nextLine();
-                    s.name = newName;
-                    System.out.println("Name updated!");
+                case 1 -> addStudent();
+                case 2 -> removeStudent();
+                case 3 -> searchStudent();
+                case 4 -> displayStudents();
+                case 5 -> {
+                    System.out.println("Exiting...");
+                    return;
                 }
-                case 2 -> {
-                    System.out.print("Enter new marks: ");
-                    double newMarks = sc.nextDouble();
-                    s.marks = newMarks;
-                    System.out.println("Marks updated!");
-                }
-                case 3 -> {
-                    System.out.print("Enter new name: ");
-                    String newName2 = sc.nextLine();
-                    System.out.print("Enter new marks: ");
-                    double newMarks2 = sc.nextDouble();
-                    s.name = newName2;
-                    s.marks = newMarks2;
-                    System.out.println("Student info updated!");
-                }
-                default -> System.out.println("Invalid choice!");
+                case 6 -> updateStudent();
+                default -> System.out.println("Invalid choice. Try again.");
             }
-
-            return;
         }
     }
 
-    System.out.println("Student not found!");
-}
-public static void sortHighToLow() {
-    if (students.isEmpty()) {
-        System.out.println("No students to sort!");
-        return;
-    }
+    // --- 1. ADD STUDENT (JDBC INSERT) ---
+    public static void addStudent() {
+        try {
+            System.out.print("Enter name: ");
+            sc.nextLine(); 
+            String name = sc.nextLine();
+            System.out.print("Enter roll number: ");
+            int roll = sc.nextInt();
+            System.out.print("Enter marks: ");
+            double marks = sc.nextDouble();
 
-    students.sort((a, b) -> Double.compare(b.marks, a.marks));
-
-    System.out.println("Sorted by Marks (High to Low):");
-    displayStudents();
-}
-public static void sortLowToHigh() {
-    if (students.isEmpty()) {
-        System.out.println("No students to sort!");
-        return;
-    }
-
-    students.sort((a, b) -> Double.compare(a.marks, b.marks));
-
-    System.out.println("Sorted by Marks (Low to High):");
-    displayStudents();
-}
-    public static void saveToFile() {
-    try {
-        FileWriter fw = new FileWriter("students.txt");
-        for (Student s : students) {
-            fw.write(s.name + "," + s.rollNumber + "," + s.marks + "\n");
+            Connection conn = getConnection();
+            String query = "INSERT INTO students (name, roll_number, marks) VALUES (?, ?, ?)";
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            
+            pstmt.setString(1, name);
+            pstmt.setInt(2, roll);
+            pstmt.setDouble(3, marks);
+            
+            int rowsAffected = pstmt.executeUpdate(); 
+            if(rowsAffected > 0) {
+                System.out.println("SUCCESS: Student added to Database!");
+            }
+            conn.close();
+            
+        } catch (SQLException e) {
+            System.out.println("Error Adding Student: " + e.getMessage());
         }
-        fw.close();
-        System.out.println("Students saved to file!");
-    } catch (Exception e) {
-        System.out.println("Error saving file: " + e.getMessage());
     }
-    }
-    public static void loadFromFile() {
-    try {
-        File file = new File("students.txt");
-        if (!file.exists()) {
-            System.out.println("No saved file found!");
-            return;
+
+    // --- 2. REMOVE STUDENT (JDBC DELETE) ---
+    public static void removeStudent() {
+        try {
+            System.out.print("Enter roll number to remove: ");
+            int roll = sc.nextInt();
+
+            Connection conn = getConnection();
+            String query = "DELETE FROM students WHERE roll_number = ?";
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            pstmt.setInt(1, roll);
+
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("SUCCESS: Student removed from Database!");
+            } else {
+                System.out.println("Student not found.");
+            }
+            conn.close();
+
+        } catch (SQLException e) {
+            System.out.println("Error removing student: " + e.getMessage());
         }
+    }
 
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        students.clear();  // Remove old data
+    // --- 3. SEARCH STUDENT (JDBC SELECT) ---
+    public static void searchStudent() {
+        try {
+            System.out.print("Enter roll number to search: ");
+            int roll = sc.nextInt();
 
-        String line;
-        while ((line = br.readLine()) != null) {
-            String[] data = line.split(",");
-            String name = data[0];
-            int roll = Integer.parseInt(data[1]);
-            double marks = Double.parseDouble(data[2]);
-            students.add(new Student(name, roll, marks));
+            Connection conn = getConnection();
+            String query = "SELECT * FROM students WHERE roll_number = ?";
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            pstmt.setInt(1, roll);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                System.out.println("\n--- Student Found in DB ---");
+                System.out.println("Name: " + rs.getString("name"));
+                System.out.println("Roll: " + rs.getInt("roll_number"));
+                System.out.println("Marks: " + rs.getDouble("marks"));
+            } else {
+                System.out.println("Student not found!");
+            }
+            conn.close();
+
+        } catch (SQLException e) {
+            System.out.println("Error searching: " + e.getMessage());
         }
-        br.close();
-        System.out.println("Students loaded from file!");
-    } catch (Exception e) {
-        System.out.println("Error reading file: " + e.getMessage());
     }
+
+    // --- 4. DISPLAY ALL (JDBC SELECT ALL) ---
+    public static void displayStudents() {
+        try {
+            Connection conn = getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * FROM students");
+
+            System.out.println("\n--- List of All Students (Fetched from MySQL) ---");
+            while (rs.next()) {
+                System.out.println("Name: " + rs.getString("name"));
+                System.out.println("Roll Number: " + rs.getInt("roll_number"));
+                System.out.println("Marks: " + rs.getDouble("marks"));
+                System.out.println("-----------------------------");
+            }
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println("Error displaying students: " + e.getMessage());
+        }
     }
-    public static boolean login() {
-    String correctUser = "admin";
-    String correctPass = "1234";
 
-    Scanner sc = new Scanner(System.in);
+    // --- 6. UPDATE STUDENT (JDBC UPDATE) ---
+    public static void updateStudent() {
+        try {
+            System.out.print("Enter roll number to update: ");
+            int roll = sc.nextInt();
+            System.out.print("Enter new Marks: ");
+            double newMarks = sc.nextDouble();
 
-    System.out.print("Enter username: ");
-    String user = sc.nextLine();
+            Connection conn = getConnection();
+            String query = "UPDATE students SET marks = ? WHERE roll_number = ?";
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            pstmt.setDouble(1, newMarks);
+            pstmt.setInt(2, roll);
 
-    System.out.print("Enter password: ");
-    String pass = sc.nextLine();
-
-    if (user.equals(correctUser) && pass.equals(correctPass)) {
-        System.out.println("Login successful!");
-        return true;
-    } else {
-        System.out.println("Wrong credentials! Access denied.");
-        return false;
-    }
+            int rows = pstmt.executeUpdate();
+            if(rows > 0) System.out.println("SUCCESS: Marks updated in Database!");
+            else System.out.println("Student not found.");
+            
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println("Error updating: " + e.getMessage());
+        }
     }
 
     public static void main(String[] args) {
-      if (login()) {
-        menu();
-     }
+        System.out.println("Connecting to Database...");
+        menu(); 
     }
-
 }
+
+    
