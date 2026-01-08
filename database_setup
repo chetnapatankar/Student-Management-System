@@ -1,0 +1,9 @@
+CREATE DATABASE student_db;
+USE student_db;
+
+CREATE TABLE students (
+    roll_number INT PRIMARY KEY,
+    name VARCHAR(100),
+    marks DOUBLE
+);
+
